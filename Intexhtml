@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Website</title>
+    <title>Glambot Login</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #111; color: white; }
-        .box { background: #222; padding: 30px; border-radius: 15px; display: inline-block; border: 1px solid #333; }
-        input { display: block; margin: 10px auto; padding: 10px; width: 200px; border-radius: 5px; border: none; }
-        button { padding: 10px 20px; cursor: pointer; background: #3ecf8e; border: none; color: white; border-radius: 5px; font-weight: bold; }
+        body { font-family: sans-serif; background: #111; color: white; display: flex; justify-content: center; padding-top: 50px; }
+        .box { background: #222; padding: 20px; border-radius: 8px; width: 300px; text-align: center; }
+        input { display: block; width: 90%; margin: 10px auto; padding: 10px; border-radius: 4px; border: none; }
+        button { padding: 10px 20px; cursor: pointer; background: #3ecf8e; color: white; border: none; border-radius: 4px; margin: 5px; }
         .hidden { display: none; }
     </style>
 </head>
@@ -15,56 +15,57 @@
 
 <div class="box">
     <div id="auth-form">
-        <h2>Welcome Back</h2>
-        <input type="email" id="email" placeholder="Email Address">
+        <h2>Glambot Login</h2>
+        <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Password">
+        <button onclick="signUp()">Sign Up</button>
         <button onclick="login()">Login</button>
-        <button onclick="signup()" style="background:#444; margin-top:5px;">Create Account</button>
     </div>
 
-    <div id="logged-in" class="hidden">
-        <h1 id="greeting">Hello!</h1>
-        <p>Your session is saved. Refresh all you want!</p>
+    <div id="user-content" class="hidden">
+        <h2 id="welcome-msg"></h2>
         <button onclick="logout()">Logout</button>
     </div>
 </div>
 
 <script>
-    // YOUR SUPABASE STUFF
+    // Your specific project details
     const SB_URL = 'https://suizhwtixjifjharpagw.supabase.co';
-    const SB_KEY = 'PASTE_YOUR_ANON_KEY_HERE'; // <--- PASTE THAT LONG KEY HERE!!
-    
-    const supabase = supabase.createClient(SB_URL, SB_KEY);
+    const SB_KEY = 'Sb_publishable_d-x18GJxfi-fuIXZ7hwxRg_vZixeSKK';
+    const supabase = scooped.createClient(SB_URL, SB_KEY);
 
-    // This part stops the "disappearing" on refresh!
     async function checkUser() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
             document.getElementById('auth-form').classList.add('hidden');
-            document.getElementById('logged-in').classList.remove('hidden');
-            document.getElementById('greeting').innerText = "Welcome, " + user.email;
+            document.getElementById('user-content').classList.remove('hidden');
+            document.getElementById('welcome-msg').innerText = "Welcome, " + user.email;
         }
     }
-    checkUser();
 
-    async function signup() {
+    async function signUp() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const { error } = await supabase.auth.signUp({ email, password });
-        if (error) alert(error.message); else alert("Check your email to verify!");
+        if (error) alert(error.message);
+        else alert("Check your dashboard - user created!");
+        checkUser();
     }
 
     async function login() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) alert(error.message); else location.reload();
+        if (error) alert(error.message);
+        checkUser();
     }
 
     async function logout() {
         await supabase.auth.signOut();
         location.reload();
     }
+
+    checkUser();
 </script>
 </body>
 </html>
