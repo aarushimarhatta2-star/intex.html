@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Glambot Login</title>
+    <title>Glambot Social</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; background: #111; color: white; display: flex; justify-content: center; padding-top: 50px; }
-        .box { background: #222; padding: 20px; border-radius: 8px; width: 300px; text-align: center; }
-        input { display: block; width: 90%; margin: 10px auto; padding: 10px; border-radius: 4px; border: none; }
-        button { padding: 10px 20px; cursor: pointer; background: #3ecf8e; color: white; border: none; border-radius: 4px; margin: 5px; }
+        body { font-family: sans-serif; background: #111; color: white; display: flex; justify-content: center; padding: 20px; }
+        .box { background: #222; padding: 20px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        input { display: block; width: 90%; margin: 10px auto; padding: 12px; border-radius: 6px; border: 1px solid #444; background: #333; color: white; }
+        button { padding: 10px 18px; cursor: pointer; background: #3ecf8e; color: white; border: none; border-radius: 6px; margin: 5px; font-weight: bold; }
+        .search-bar { display: flex; align-items: center; justify-content: center; margin-top: 15px; border-top: 1px solid #444; pt: 15px; }
         .hidden { display: none; }
+        #user-content { text-align: left; }
     </style>
 </head>
 <body>
 
 <div class="box">
     <div id="auth-form">
-        <h2>Glambot Login</h2>
+        <h2>Glambot</h2>
         <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Password">
         <button onclick="signUp()">Sign Up</button>
@@ -23,45 +25,70 @@
     </div>
 
     <div id="user-content" class="hidden">
-        <h2 id="welcome-msg"></h2>
-        <button onclick="logout()">Logout</button>
+        <h3 id="welcome-msg"></h3>
+        
+        <label>Your Display Name:</label>
+        <input type="text" id="display-name" placeholder="Enter your name...">
+        <button onclick="saveProfile()">Save Name</button>
+
+        <div class="search-bar">
+            <span>🔍</span>
+            <input type="text" id="search-friend" placeholder="Search friends...">
+            <button onclick="sendRequest()">Add</button>
+        </div>
+
+        <button style="background: #ff4444; margin-top: 20px;" onclick="logout()">Logout</button>
     </div>
 </div>
 
 <script>
-    // Your specific project details
     const SB_URL = 'https://suizhwtixjifjharpagw.supabase.co';
-    const SB_KEY = 'Sb_publishable_d-x18GJxfi-fuIXZ7hwxRg_vZixeSKK';
-    const supabase = scooped.createClient(SB_URL, SB_KEY);
+    const SB_KEY = 'Sb_publishable_d-x18GJxfi-fuIXZ7hwxRg_vZixeSKK'; // Your copied key
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
     async function checkUser() {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await supabaseClient.auth.getUser();
         if (user) {
             document.getElementById('auth-form').classList.add('hidden');
             document.getElementById('user-content').classList.remove('hidden');
-            document.getElementById('welcome-msg').innerText = "Welcome, " + user.email;
+            document.getElementById('welcome-msg').innerText = "Logged in as: " + user.email;
+            
+            // Try to load saved name
+            const { data } = await supabaseClient.from('profiles').select('username').eq('id', user.id).single();
+            if (data) document.getElementById('display-name').value = data.username;
         }
+    }
+
+    async function saveProfile() {
+        const name = document.getElementById('display-name').value;
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        const { error } = await supabaseClient.from('profiles').upsert({ id: user.id, username: name });
+        if (error) alert("Error: Make sure you created a 'profiles' table!");
+        else alert("Name saved successfully!");
+    }
+
+    async function sendRequest() {
+        alert("Search feature active! Searching for: " + document.getElementById('search-friend').value);
     }
 
     async function signUp() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabaseClient.auth.signUp({ email, password });
         if (error) alert(error.message);
-        else alert("Check your dashboard - user created!");
-        checkUser();
+        else alert("Account created! Click login.");
     }
 
     async function login() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) alert(error.message);
         checkUser();
     }
 
     async function logout() {
-        await supabase.auth.signOut();
+        await supabaseClient.auth.signOut();
         location.reload();
     }
 
