@@ -4,17 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Y2K GlamHub</title>
-    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #ff00ff; background-image: radial-gradient(#8000ff 20%, transparent 20%), radial-gradient(#00ffff 20%, transparent 20%); background-size: 30px 30px; font-family: 'Courier New', monospace; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .window { background: silver; border: 4px outset white; width: 350px; padding: 2px; box-shadow: 10px 10px 0px black; }
+        .title-bar { background: darkblue; color: white; padding: 5px; font-weight: bold; text-align: left; display: flex; justify-content: space-between; }
+        .content { padding: 20px; color: black; background: #fff; border: 2px inset gray; }
+        input { width: 90%; margin: 10px 0; padding: 5px; border: 2px inset white; }
+        button { background: silver; border: 2px outset white; padding: 5px 15px; cursor: pointer; font-weight: bold; margin: 5px; }
+        button:active { border: 2px inset white; }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to Y2K GlamHub</h1>
-    </header>
-    <main>
-        <p>Your one-stop destination for all things glam and retro.</p>
-    </main>
-    <footer>
-        <p>&copy; 2026 Y2K GlamHub. All rights reserved.</p>
-    </footer>
+    <div class="window">
+        <div class="title-bar"><span>✨ Y2K_GLAM_HUB.exe</span><span>[X]</span></div>
+        <div class="content">
+            <div id="auth-ui">
+                <p>PLEASE LOGIN TO ENTER</p>
+                <input type="email" id="email" placeholder="email@y2k.com">
+                <input type="password" id="password" placeholder="password">
+                <br>
+                <button onclick="login()">LOGIN</button>
+                <button onclick="signUp()">SIGN UP</button>
+            </div>
+            <div id="app-ui" class="hidden">
+                <h2 id="welcome"></h2>
+                <input type="text" id="username" placeholder="SET DISPLAY NAME">
+                <button onclick="saveName()">SAVE NAME</button>
+                <br><br>
+                <button style="background:red; color:white;" onclick="logout()">LOGOUT</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const SB_URL = 'https://suizhwtixjifjharpagw.supabase.co';
+        const SB_KEY = 'Sb_publishable_d-x18GJxfi-fuIXZ7hwxRg_vZixeSKK';
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+        async function checkUser() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
+                document.getElementById('auth-ui').classList.add('hidden');
+                document.getElementById('app-ui').classList.remove('hidden');
+                document.getElementById('welcome').innerText = "WELCOME: " + user.email;
+            }
+        }
+        async function login() {
+            const { error } = await supabaseClient.auth.signInWithPassword({ 
+                email: document.getElementById('email').value, 
+                password: document.getElementById('password').value 
+            });
+            if (error) alert(error.message); else checkUser();
+        }
+        async function signUp() {
+            const { error } = await supabaseClient.auth.signUp({ 
+                email: document.getElementById('email').value, 
+                password: document.getElementById('password').value 
+            });
+            if (error) alert(error.message); else alert("Check email or try logging in!");
+        }
+        async function saveName() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const { error } = await supabaseClient.from('profiles').upsert({ 
+                id: user.id, username: document.getElementById('username').value 
+            });
+            if (error) alert("Error! Make sure you created the 'profiles' table in Supabase."); else alert("Name Saved!");
+        }
+        async function logout() { await supabaseClient.auth.signOut(); location.reload(); }
+        checkUser();
+    </script>
 </body>
 </html>
